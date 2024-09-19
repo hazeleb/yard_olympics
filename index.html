@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Yard Olympics Schedule</title>
+    <style>
+      div {
+        white-space: nowrap;
+        font-family: monospace;
+      }
+    </style>
+
+    <!-- Recommended meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+    <!-- PyScript CSS -->
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+</head>
+<body>
+    
+    <h2 style="text-align: center;">Yard Olympics 2024</h2><br>
+    <div>
+        <p id="score_total" style="text-align: left;"></p>
+        <br>
+        <p id="game_and_score" style="text-align: left;"></p>
+    </div>
+    <br>
+
+    <div >
+        <label for="team_name">What is your team?</label>
+        <br>
+        <input type="text" id="input_str_team" name="team_name"/>
+        <br>
+        <button id="schedule-button" type="button" py-click="schedule()">Team Schedule</button> 
+        <br>
+    </div>
+    <p></p>
+    <div id="team_schedule" ></div>
+    <p></p> 
+
+    <div>
+        <label for="game_score" id="game_round"> </label>
+        <br>
+        <input type="number" id="input_str_score" name="game_score"/>
+        <br>
+        <button id="score-button" type="button" py-click="score()">Submit Score</button> 
+    </div>
+    
+    <script type="py" src="./main.py" config="./pyscript.toml" terminal></script>
+
+    <py-config>
+      packages = ["pandas"]
+    </py-config>
+
+    <py-script>
+
+        def schedule():
+            global schedule_df, schedule_string, games
+            team_name = str(Element('input_str_team').value)
+            team_df = df[df['team_names'] == team_name]
+            #schedule_string = 'Seed'.ljust(10,'&nbsp') + 'Country'.ljust(25,'&nbsp') + 'Seed2'.ljust(10,'&nbsp') + 'Country2'.ljust(25,'&nbsp') + 'Game'.ljust(20,'&nbsp') + 'Time'.ljust(10,'&nbsp') + 'Score'.ljust(8,'&nbsp') +'\n'
+            schedule_string = 'Score'.ljust(8,'&nbsp') + 'Time'.ljust(10,'&nbsp') + 'Game'.ljust(20,'&nbsp') + 'Seed2'.ljust(10,'&nbsp') + 'Country2'.ljust(25,'&nbsp') + 'Seed'.ljust(10,'&nbsp') + 'Country'.ljust(25,'&nbsp') + '\n'
+            for i in range(len(game_names)):
+                game = 'round_' + str(i)
+                team_names2 = 'team_names2_round_' + str(i)
+                seed2 = 'seed2_round_' + str(i)
+                df_temp = team_df[['seed','team_names',seed2,team_names2,game,'score']]
+                df_temp = df_temp.rename(columns={seed2:'seed2',team_names2:'team_names2',game:'game'})
+                seed = str(df_temp['seed'].values[0])
+                country = str(df_temp['team_names'].values[0])
+                seed2 = str(df_temp['seed2'].values[0])
+                country2 = str(df_temp['team_names2'].values[0])
+                game = str(df_temp['game'].values[0])
+                time = str(game_times[i])
+                score = str(df_temp['score'].values[0])
+                schedule_string_temp2 = seed.ljust(10,'&nbsp') + country.ljust(25,'&nbsp') + seed2.ljust(10,'&nbsp') + country2.ljust(
+                        25,'&nbsp') + game.ljust(20,'&nbsp') + time.ljust(10,'&nbsp') + score.ljust(8,'&nbsp') + '\n'
+                schedule_string_temp = score.ljust(8,'&nbsp') + time.ljust(10,'&nbsp') + game.ljust(20,'&nbsp') + seed2.ljust(10,'&nbsp') + country2.ljust(
+                        25,'&nbsp') + seed.ljust(10,'&nbsp') + country.ljust(25,'&nbsp') +   '\n'
+                schedule_string += schedule_string_temp
+                if i == 0:
+                    schedule_df = df_temp
+                else:
+                    schedule_df = pd.concat([schedule_df,df_temp], axis='rows')
+            #display(schedule_string, target='team_schedule')
+            #Element("team_schedule").write(schedule_string)
+            games = schedule_df['game'].values[game_rnd]
+            Element("team_schedule").element.innerText = schedule_string
+            Element("game_round").element.innerText = "What was your score:  " + games + " ?"
+
+        def score():
+            global game_rnd, score_string, games, total_score, game_and_score_string
+            if game_rnd &lt len(game_names):
+                if game_rnd == 0:
+                    total_score = int(Element('input_str_score').value)
+                else:
+                    total_score_temp = int(Element('input_str_score').value)
+                    total_score += total_score_temp
+                game_and_score_string_tmp = "Game:  " + games.ljust(20,'&nbsp') + " Score:  " + str(Element('input_str_score').value) + "\n"
+                game_and_score_string += game_and_score_string_tmp
+                Element("score_total").element.innerText = "Total Score:  " + str(total_score) 
+                Element("game_and_score").element.innerText = game_and_score_string
+                if game_rnd &lt len(game_names)-1:
+                    game_rnd += 1
+                    games = schedule_df['game'].values[game_rnd]
+                    Element("game_round").element.innerText = "What was your score:  " + games + " ?"
+                else:
+                    game_rnd += 1
+                
+    </py-script>
+            
+    
+</body>
+    
+</html>
